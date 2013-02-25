@@ -1,254 +1,170 @@
-/* 
+/*
  * Copyright (c) 2009 Keith Lazuka
  * License: http://www.opensource.org/licenses/mit-license.html
  */
 
-#import "KalViewController.h"
-#import "KalLogic.h"
 #import "KalDataSource.h"
 #import "KalDate.h"
+#import "KalLogic.h"
 #import "KalPrivate.h"
-#import "AgCalendarView.h"
-#import "AgCalendarModule.h"
-
-#define PROFILER 0
-#if PROFILER
-#include <mach/mach_time.h>
-#include <time.h>
-#include <math.h>
-void mach_absolute_difference(uint64_t end, uint64_t start, struct timespec *tp)
-{
-    uint64_t difference = end - start;
-    static mach_timebase_info_data_t info = {0,0};
-
-    if (info.denom == 0)
-        mach_timebase_info(&info);
-    
-    uint64_t elapsednano = difference * (info.numer / info.denom);
-    tp->tv_sec = elapsednano * 1e-9;
-    tp->tv_nsec = elapsednano - (tp->tv_sec * 1e9);
-}
-#endif
+#import "KalViewController.h"
 
 NSString *const KalDataSourceChangedNotification = @"KalDataSourceChangedNotification";
 
 @interface KalViewController ()
-@property (nonatomic, retain, readwrite) NSDate *initialDate;
-@property (nonatomic, retain, readwrite) NSDate *selectedDate;
-- (KalView*)calendarView;
+
+@property (nonatomic) BOOL wantsTableView;
+@property (nonatomic, strong) KalLogic *logic;
+@property (nonatomic, strong, readwrite) NSDate *initialDate;
+@property (nonatomic, strong, readwrite) NSDate *selectedDate;
+@property (nonatomic, strong, readwrite) UITableView *tableView;
+
+- (KalView *) calendarView;
+
 @end
 
 @implementation KalViewController
 
-@synthesize dataSource, delegate, initialDate, selectedDate;
-
-- (id)initWithSelectedDate:(NSDate *)date
+- (id) init
 {
-  if ((self = [super init])) {
-    logic = [[KalLogic alloc] initForDate:date];
+  return [self initWithSelectedDate: [NSDate date] wantsTableView: YES];
+}
+- (id) initWithSelectedDate: (NSDate *) date wantsTableView: (BOOL) flag
+{
+  if ((self = [super init]))
+  {
+    self.logic = [[KalLogic alloc] initWithDate: date];
     self.initialDate = date;
     self.selectedDate = date;
-    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(significantTimeChangeOccurred) name:UIApplicationSignificantTimeChangeNotification object:nil];
-    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(reloadData) name:KalDataSourceChangedNotification object:nil];
+    self.wantsTableView = flag;
+    
+    [[NSNotificationCenter defaultCenter] addObserver: self selector: @selector(significantTimeChangeOccurred) name: UIApplicationSignificantTimeChangeNotification object:nil];
+    [[NSNotificationCenter defaultCenter] addObserver: self selector: @selector(reloadData) name: KalDataSourceChangedNotification object:nil];
   }
+  
   return self;
 }
 
-- (id)init
+- (KalView *) calendarView
 {
-  return [self initWithSelectedDate:[NSDate date]];
+  return (KalView *) self.view;
 }
 
-- (KalView*)calendarView { return (KalView*)self.view; }
-
-- (void)setDataSource:(id<KalDataSource>)aDataSource
+- (NSDate *) selectedDate
 {
-  if (dataSource != aDataSource) {
-    dataSource = aDataSource;
-    tableView.dataSource = dataSource;
-  }
+  return self.calendarView.selectedDate.date;
 }
 
-- (void)setDelegate:(id<UITableViewDelegate>)aDelegate
+- (void) clearTable
 {
-  if (delegate != aDelegate) {
-    delegate = aDelegate;
-    tableView.delegate = delegate;
-  }
+  [self.dataSource removeAllItems];
+  [self.tableView reloadData];
 }
-
-- (void)clearTable
+- (void) dealloc
 {
-  [dataSource removeAllItems];
-  [tableView reloadData];
+  [[NSNotificationCenter defaultCenter] removeObserver: self name: UIApplicationSignificantTimeChangeNotification object: nil];
+  [[NSNotificationCenter defaultCenter] removeObserver: self name: KalDataSourceChangedNotification object: nil];
 }
-
-- (void)reloadData
+- (void) reloadData
 {
-  [dataSource presentingDatesFrom:logic.fromDate to:logic.toDate delegate:self];
+  [self.dataSource presentingDatesFrom: self.logic.fromDate to: self.logic.toDate delegate: self];
 }
-
-- (void)significantTimeChangeOccurred
+- (void) significantTimeChangeOccurred
 {
-  [[self calendarView] jumpToSelectedMonth];
+  [self.calendarView slide: KalGridViewSlideTypeNone];
   [self reloadData];
 }
-
-// -----------------------------------------
-#pragma mark KalViewDelegate protocol
-
-- (void)didSelectDate:(KalDate *)date
+- (void) showAndSelectDate: (NSDate *) date
 {
-  self.selectedDate = [date NSDate];
-  NSDate *from = [[date NSDate] cc_dateByMovingToBeginningOfDay];
-  NSDate *to = [[date NSDate] cc_dateByMovingToEndOfDay];
-  if ([self.delegate respondsToSelector:@selector(didSelectDate:)]) {
-    [self.delegate performSelector:@selector(didSelectDate:) withObject:to];
-  }
-  [self clearTable];
-  [dataSource loadItemsFromDate:from toDate:to];
-  [tableView reloadData];
-  [tableView flashScrollIndicators];
-}
-
-- (void)didSelectDateLong:(KalDate *)date
-{
-  if ([self.delegate respondsToSelector:@selector(didSelectDateLong:)]) {
-    NSDate *to = [[date NSDate] cc_dateByMovingToEndOfDay];
-    [self.delegate performSelector:@selector(didSelectDateLong:) withObject:to];
-  }
-}
-
-- (void)showPreviousMonth
-{
-  [self clearTable];
-  [logic retreatToPreviousMonth];
-  [[self calendarView] slideDown];
-  [self reloadData];
-  if ([self.delegate respondsToSelector:@selector(showPreviousMonth:)]) {
-    [self.delegate performSelector:@selector(showPreviousMonth:) withObject:nil];
-  }
-}
-
-- (void)showFollowingMonth
-{
-  [self clearTable];
-  [logic advanceToFollowingMonth];
-  [[self calendarView] slideUp];
-  [self reloadData];
-  if ([self.delegate respondsToSelector:@selector(showFollowingMonth:)]) {
-    [self.delegate performSelector:@selector(showFollowingMonth:) withObject:nil];
-  }
-}
-
-// -----------------------------------------
-#pragma mark KalDataSourceCallbacks protocol
-
-- (void)loadedDataSource:(id<KalDataSource>)theDataSource;
-{
-  NSArray *markedDates = [theDataSource markedDatesFrom:logic.fromDate to:logic.toDate];
-  NSMutableArray *dates = [[markedDates mutableCopy] autorelease];
-  for (int i=0; i<[dates count]; i++)
-    [dates replaceObjectAtIndex:i withObject:[KalDate dateFromNSDate:[dates objectAtIndex:i]]];
-  
-  [[self calendarView] markTilesForDates:dates];
-  [self didSelectDate:self.calendarView.selectedDate];
-  //[[self calendarView] selectDate:[KalDate dateFromNSDate:self.selectedDate]];
-}
-
-// ---------------------------------------
-#pragma mark -
-
-- (void)showAndSelectDate:(NSDate *)date
-{
-  if ([[self calendarView] isSliding])
+  if (self.calendarView.isSliding)
     return;
   
-  [logic moveToMonthForDate:date];
+  [self.logic moveToMonthForDate: date];
+  [self.calendarView slide: KalGridViewSlideTypeNone];
   
-#if PROFILER
-  uint64_t start, end;
-  struct timespec tp;
-  start = mach_absolute_time();
-#endif
-  
-  [[self calendarView] jumpToSelectedMonth];
-  
-#if PROFILER
-  end = mach_absolute_time();
-  mach_absolute_difference(end, start, &tp);
-  printf("[[self calendarView] jumpToSelectedMonth]: %.1f ms\n", tp.tv_nsec / 1e6);
-#endif
-  
-  [[self calendarView] selectDate:[KalDate dateFromNSDate:date]];
+  [self.calendarView selectDate: [KalDate dateWithDate: date]];
   [self reloadData];
 }
 
-- (NSDate *)selectedDate
+#pragma mark Kal View Delegate
+
+- (void) didSelectDate: (KalDate *) _date
 {
-  return [self.calendarView.selectedDate NSDate];
+  NSDate *date = _date.date;
+  self.selectedDate = date;
+  [self clearTable];
+  
+  NSDate *from = [date cc_dateByMovingToBeginningOfDay];
+  NSDate *to = [date cc_dateByMovingToEndOfDay];
+  [self.dataSource loadItemsFromDate: from toDate: to];
+  
+  [self.tableView reloadData];
+  [self.tableView flashScrollIndicators];
+}
+- (void) showFollowingMonth
+{
+  [self clearTable];
+  [self.logic advanceToFollowingMonth];
+  [self.calendarView slide: KalGridViewSlideTypeUp];
+  [self reloadData];
+}
+- (void) showPreviousMonth
+{
+  [self clearTable];
+  [self.logic retreatToPreviousMonth];
+  [self.calendarView slide: KalGridViewSlideTypeDown];
+  [self reloadData];
 }
 
+#pragma mark Kal Data Source Callbacks
 
-// -----------------------------------------------------------------------------------
-#pragma mark UIViewController
-
-- (void)didReceiveMemoryWarning
+- (void) loadedDataSource: (id <KalDataSource>) aDataSource
 {
-  self.initialDate = self.selectedDate; // must be done before calling super
+  NSArray *markedDates = [aDataSource markedDatesFrom: self.logic.fromDate to: self.logic.toDate];
+  NSMutableArray *dates = [markedDates mutableCopy];
+  NSUInteger i, count = dates.count;
+  for (i = 0; i < count; i++)
+    dates[i] = [KalDate dateWithDate: dates[i]];
+  
+  [self.calendarView markTilesForDates: dates];
+  [self didSelectDate: self.calendarView.selectedDate];
+}
+
+#pragma mark View Lifecycle
+
+- (void) didReceiveMemoryWarning
+{
+  // Must be done before calling super
+  self.initialDate = self.selectedDate;
+  
   [super didReceiveMemoryWarning];
 }
-
-- (void)loadView
+- (void) loadView
 {
-  if (!self.title)
-    self.title = @"Calendar";
+  if (!self.title) self.title = @"Calendar";
   
-  CGRect popoverRect = CGRectMake(0, 0, self.contentSizeForViewInPopover.width, self.contentSizeForViewInPopover.height);
-  CGRect windowsRect = [[UIScreen mainScreen] applicationFrame];
-  //CGRect rect = CGRectMake(0, 0, windowsRect.size.width, windowsRect.size.height);
-  CGRect rect = CGRectMake(0, 0, MIN(popoverRect.size.width, windowsRect.size.width), MIN(popoverRect.size.height, windowsRect.size.height));
+  KalView *kalView = [[KalView alloc] initWithFrame: [UIScreen mainScreen].bounds logic: self.logic wantsTableView: self.wantsTableView];
+  kalView.delegate = self;
   
-  KalView *kalView = [[[KalView alloc] initWithFrame:rect delegate:self logic:logic] autorelease];
   self.view = kalView;
-  tableView = kalView.tableView;
-  tableView.dataSource = dataSource;
-  tableView.delegate = delegate;
-  [tableView retain];
-  [kalView selectDate:[KalDate dateFromNSDate:self.initialDate]];
+  self.tableView = kalView.tableView;
+  [kalView selectDate: [KalDate dateWithDate: self.initialDate]];
   [self reloadData];
 }
-
-- (void)viewDidUnload
+- (void) viewDidAppear: (BOOL) animated
 {
+  [super viewDidAppear: animated];
+  [self.tableView flashScrollIndicators];
+}
+- (void) viewDidUnload
+{
+  self.tableView = nil;
   [super viewDidUnload];
-  [tableView release];
-  tableView = nil;
 }
-
-- (void)viewWillAppear:(BOOL)animated
+- (void) viewWillAppear: (BOOL) animated
 {
-  [super viewWillAppear:animated];
-  [tableView reloadData];
-}
-
-- (void)viewDidAppear:(BOOL)animated
-{
-  [super viewDidAppear:animated];
-  [tableView flashScrollIndicators];
-}
-
-#pragma mark -
-
-- (void)dealloc
-{
-  [[NSNotificationCenter defaultCenter] removeObserver:self name:UIApplicationSignificantTimeChangeNotification object:nil];
-  [[NSNotificationCenter defaultCenter] removeObserver:self name:KalDataSourceChangedNotification object:nil];
-  [initialDate release];
-  [selectedDate release];
-  [logic release];
-  [tableView release];
-  [super dealloc];
+  [super viewWillAppear: animated];
+  [self.tableView reloadData];
 }
 
 @end

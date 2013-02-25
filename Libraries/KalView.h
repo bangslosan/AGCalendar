@@ -1,11 +1,12 @@
-/* 
+/*
  * Copyright (c) 2009 Keith Lazuka
  * License: http://www.opensource.org/licenses/mit-license.html
  */
 
 #import <UIKit/UIKit.h>
+#import "KalGridView.h"
 
-@class KalGridView, KalLogic, KalDate;
+@class KalLogic, KalDate;
 @protocol KalViewDelegate, KalDataSourceCallbacks;
 
 /*
@@ -38,42 +39,38 @@
  *
  */
 @interface KalView : UIView
-{
-  UILabel *headerTitleLabel;
-  KalGridView *gridView;
-  UITableView *tableView;
-  UIImageView *shadowView;
-  id<KalViewDelegate> delegate;
-  KalLogic *logic;
-}
 
-@property (nonatomic, assign) id<KalViewDelegate> delegate;
-@property (nonatomic, readonly) UITableView *tableView;
-@property (nonatomic, readonly) KalDate *selectedDate;
+@property (nonatomic, getter = isSliding) BOOL sliding;
+@property (nonatomic, strong, readonly) UITableView *tableView;
+@property (nonatomic, strong) id <KalViewDelegate> delegate;
+@property (nonatomic, weak, readonly) KalDate *selectedDate;
 
-- (id)initWithFrame:(CGRect)frame delegate:(id<KalViewDelegate>)delegate logic:(KalLogic *)logic;
-- (BOOL)isSliding;
-- (void)selectDate:(KalDate *)date;
-- (void)markTilesForDates:(NSArray *)dates;
-- (void)redrawEntireMonth;
+- (id) initWithFrame: (CGRect) frame logic: (KalLogic *) logic wantsTableView: (BOOL) flag;
 
-// These 3 methods are exposed for the delegate. They should be called 
-// *after* the KalLogic has moved to the month specified by the user.
-- (void)slideDown;
-- (void)slideUp;
-- (void)jumpToSelectedMonth;    // change months without animation (i.e. when directly switching to "Today")
+- (void) markTilesForDates:(NSArray *) dates;
+- (void) redrawEntireMonth;
+- (void) selectDate: (KalDate *) date;
+- (void) slide: (KalGridViewSlideType) slideType; // This method is exposed for the delegate. It should be called *after* the KalLogic has moved to the month specified by the user.
+
+#pragma mark - Appearance Customization
+
+@property (nonatomic, strong) UIImage *gridBackgroundImage;
+@property (nonatomic, strong) UIImage *gridDropShadowImage;
+@property (nonatomic, strong) UIColor *titleLabelTextColor;
+@property (nonatomic, strong) UIColor *weekdayLabelTextColor;
+
+- (UIImage *) leftArrowImageForState: (UIControlState) state;
+- (UIImage *) rightArrowImageForState: (UIControlState) state;
+
+- (void) setLeftArrowImage: (UIImage *) image forState: (UIControlState) state;
+- (void) setRightArrowImage: (UIImage *) image forState: (UIControlState) state;
 
 @end
 
-#pragma mark -
+@protocol KalViewDelegate <NSObject>
 
-@class KalDate;
-
-@protocol KalViewDelegate
-
-- (void)showPreviousMonth;
-- (void)showFollowingMonth;
-- (void)didSelectDate:(KalDate *)date;
-- (void)didSelectDateLong:(KalDate *)date;
+- (void) showPreviousMonth;
+- (void) showFollowingMonth;
+- (void) didSelectDate: (KalDate *) date;
 
 @end

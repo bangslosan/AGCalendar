@@ -8,17 +8,14 @@
 @class KalTileView, KalDate;
 
 @interface KalMonthView : UIView
-{
-    NSUInteger numWeeks;
-    NSDateFormatter *tileAccessibilityFormatter;
-}
 
-@property (nonatomic) NSUInteger numWeeks;
+@property (nonatomic) NSUInteger numberOfWeeks;
+@property (nonatomic, strong) UIImage *backgroundImage;
 
-- (id)initWithFrame:(CGRect)rect; // designated initializer
-- (void)showDates:(NSArray *)mainDates leadingAdjacentDates:(NSArray *)leadingAdjacentDates trailingAdjacentDates:(NSArray *)trailingAdjacentDates;
-- (KalTileView *)firstTileOfMonth;
-- (KalTileView *)tileForDate:(KalDate *)date;
-- (void)markTilesForDates:(NSArray *)dates;
+- (KalTileView *) firstTileOfMonth;
+- (KalTileView *) tileForDate: (KalDate *) date;
+
+- (void) markTilesForDates: (NSArray *) dates;
+- (void) showDates: (NSArray *) mainDates leadingAdjacentDates: (NSArray *) leadingAdjacentDates trailingAdjacentDates: (NSArray *) trailingAdjacentDates;
 
 @end

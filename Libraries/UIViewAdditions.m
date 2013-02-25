@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (c) 2009 Keith Lazuka
  * License: http://www.opensource.org/licenses/mit-license.html
  */
@@ -7,76 +7,82 @@
 
 @implementation UIView (KalAdditions)
 
-- (CGFloat)left
+#pragma mark - Left
+
+- (CGFloat) left
 {
-  return self.frame.origin.x;
+	return self.frame.origin.x;
+}
+- (void) setLeft: (CGFloat) x
+{
+	CGRect frame = self.frame;
+	frame.origin.x = x;
+	self.frame = frame;
 }
 
-- (void)setLeft:(CGFloat)x
+#pragma mark - Right
+
+- (CGFloat) right
 {
-  CGRect frame = self.frame;
-  frame.origin.x = x;
-  self.frame = frame;
+	return self.frame.origin.x + self.frame.size.width;
+}
+- (void) setRight: (CGFloat) right
+{
+	CGRect frame = self.frame;
+	frame.origin.x = right - frame.size.width;
+	self.frame = frame;
 }
 
-- (CGFloat)right
+#pragma mark - Top
+
+- (CGFloat) top
 {
-  return self.frame.origin.x + self.frame.size.width;
+	return self.frame.origin.y;
+}
+- (void) setTop: (CGFloat) y
+{
+	CGRect frame = self.frame;
+	frame.origin.y = y;
+	self.frame = frame;
 }
 
-- (void)setRight:(CGFloat)right
+#pragma mark - Bottom
+
+- (CGFloat) bottom
 {
-  CGRect frame = self.frame;
-  frame.origin.x = right - frame.size.width;
-  self.frame = frame;
+	return self.frame.origin.y + self.frame.size.height;
+}
+- (void) setBottom: (CGFloat) bottom
+{
+	CGRect frame = self.frame;
+	frame.origin.y = bottom - frame.size.height;
+	self.frame = frame;
 }
 
-- (CGFloat)top
+#pragma mark - Width
+
+- (CGFloat) width
 {
-  return self.frame.origin.y;
+	return self.frame.size.width;
+}
+- (void) setWidth: (CGFloat) width
+{
+	CGRect frame = self.frame;
+	frame.size.width = width;
+	self.frame = frame;
 }
 
-- (void)setTop:(CGFloat)y
-{
-  CGRect frame = self.frame;
-  frame.origin.y = y;
-  self.frame = frame;
-}
+#pragma mark - Height
 
-- (CGFloat)bottom
+- (CGFloat) height
 {
-  return self.frame.origin.y + self.frame.size.height;
+	return self.frame.size.height;
 }
-
-- (void)setBottom:(CGFloat)bottom
+- (void) setHeight: (CGFloat) height
 {
-  CGRect frame = self.frame;
-  frame.origin.y = bottom - frame.size.height;
-  self.frame = frame;
-}
-
-- (CGFloat)width
-{
-  return self.frame.size.width;
-}
-
-- (void)setWidth:(CGFloat)width
-{
-  CGRect frame = self.frame;
-  frame.size.width = width;
-  self.frame = frame;
-}
-
-- (CGFloat)height
-{
-  return self.frame.size.height;
-}
-
-- (void)setHeight:(CGFloat)height
-{
-  CGRect frame = self.frame;
-  frame.size.height = height;
-  self.frame = frame;
+	CGRect frame = self.frame;
+	frame.size.height = height;
+	self.frame = frame;
 }
 
 @end

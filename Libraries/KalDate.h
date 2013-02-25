@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (c) 2009 Keith Lazuka
  * License: http://www.opensource.org/licenses/mit-license.html
  */
@@ -6,23 +6,18 @@
 #import <Foundation/Foundation.h>
 
 @interface KalDate : NSObject
-{
-  struct {
-    unsigned int month : 4;
-    unsigned int day : 5;
-    unsigned int year : 15;
-  } a;
-}
 
-+ (KalDate *)dateForDay:(unsigned int)day month:(unsigned int)month year:(unsigned int)year;
-+ (KalDate *)dateFromNSDate:(NSDate *)date;
+@property (nonatomic, readonly) NSUInteger day;
+@property (nonatomic, readonly) NSUInteger month;
+@property (nonatomic, readonly) NSUInteger year;
+@property (nonatomic, readonly, getter = isToday) BOOL today;
+@property (nonatomic, strong, readonly) NSDate *date;
 
-- (id)initForDay:(unsigned int)day month:(unsigned int)month year:(unsigned int)year;
-- (unsigned int)day;
-- (unsigned int)month;
-- (unsigned int)year;
-- (NSDate *)NSDate;
-- (NSComparisonResult)compare:(KalDate *)otherDate;
-- (BOOL)isToday;
+- (NSComparisonResult) compare: (KalDate *) otherDate;
+
+- (id) initWithDay: (NSUInteger) day month: (NSUInteger) month year: (NSUInteger) year;
+
++ (KalDate *) dateWithDate: (NSDate *) date;
++ (KalDate *) dateWithDay: (NSUInteger) day month: (NSUInteger) month year: (NSUInteger) year;
 
 @end

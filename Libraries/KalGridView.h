@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (c) 2009 Keith Lazuka
  * License: http://www.opensource.org/licenses/mit-license.html
  */
@@ -18,28 +18,26 @@
  *  (it is managed by KalView).
  *
  */
+
+typedef NS_ENUM(NSUInteger, KalGridViewSlideType) {
+	KalGridViewSlideTypeNone = 0,
+	KalGridViewSlideTypeUp = 1,
+	KalGridViewSlideTypeDown = 2
+};
+
 @interface KalGridView : UIView
-{
-  id<KalViewDelegate> delegate;  // Assigned.
-  KalLogic *logic;
-  KalMonthView *frontMonthView;
-  KalMonthView *backMonthView;
-  KalTileView *selectedTile;
-  KalTileView *highlightedTile;
-  BOOL transitioning;
-}
 
-@property (nonatomic, readonly) BOOL transitioning;
-@property (nonatomic, readonly) KalDate *selectedDate;
+@property (nonatomic, readonly, getter = isTransitioning) BOOL transitioning;
+@property (nonatomic, strong, readonly) KalDate *selectedDate;
+@property (nonatomic, strong) UIColor *gridBackgroundColor;
+@property (nonatomic, strong) UIImage *gridBackgroundImage;
+@property (nonatomic, strong) UIView *backgroundView;
+@property (nonatomic, strong) id <KalViewDelegate> delegate;
 
-- (id)initWithFrame:(CGRect)frame logic:(KalLogic *)logic delegate:(id<KalViewDelegate>)delegate;
-- (void)selectDate:(KalDate *)date;
-- (void)markTilesForDates:(NSArray *)dates;
+- (id) initWithFrame:(CGRect)frame logic:(KalLogic *)logic;
 
-// These 3 methods should be called *after* the KalLogic
-// has moved to the previous or following month.
-- (void)slideUp;
-- (void)slideDown;
-- (void)jumpToSelectedMonth;    // see comment on KalView
+- (void) selectDate:(KalDate *)date;
+- (void) slide:(KalGridViewSlideType)slideType; // This method should be called *after* the KalLogic has moved to the previous or following month.
+- (void) markTilesForDates:(NSArray *)dates;
 
 @end

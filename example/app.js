@@ -7,7 +7,7 @@
 Titanium.Calendar = Ti.Calendar = require('ag.calendar');
 
 // Set EventKit as our datasource
-Ti.Calendar.dataSource("coredata");
+Ti.Calendar.dataSource("eventkit");
 
 var platform = Titanium.Platform.osname;
 
@@ -167,7 +167,7 @@ var endDate = new Date();
 endDate.setHours(endDate.getHours()+3);
 
 // Add event to our calendar.
-Ti.Calendar.addEvent({
+/*Ti.Calendar.addEvent({
     title: "Starting and ending today",
     startDate: new Date(),
     endDate: endDate,
@@ -182,7 +182,7 @@ Ti.Calendar.addEvent({
     type:"private",
     attendees: "Bill Gates, Mark Zuckerberg",
     organizer: "Chris"
-});
+});*/
 
 // Event 2: An event recurring every month for one year.
 // First, create a recurring end-date.
@@ -209,7 +209,7 @@ recurringEvent.type = "private";
 recurringEvent.attendees = "Bill Gates, Mark Zuckerberg";
 recurringEvent.organizer = "Chris";
 
-Ti.Calendar.addEvent(recurringEvent);
+//Ti.Calendar.addEvent(recurringEvent);
 
 // Just to illustrate the recurring event function, we'll create
 // an event recurring every other day for one month using our first method.
@@ -217,7 +217,7 @@ var recurringEnd2 = new Date();
 recurringEnd2.setMonth(recurringEnd2.getMonth()+1);
 
 // The event
-Ti.Calendar.addEvent({
+/*Ti.Calendar.addEvent({
     title: "Every other day for one month",
     startDate: new Date(),
     endDate: endDate,
@@ -231,7 +231,7 @@ Ti.Calendar.addEvent({
     alarm: {
         offset: -900 // 900 seconds = 15 minutes
     }
-});
+});*/
 
 
 // Apple only allows the module to run in UIPopoverView on iPad.

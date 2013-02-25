@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (c) 2009 Keith Lazuka
  * License: http://www.opensource.org/licenses/mit-license.html
  */
@@ -8,95 +8,86 @@
 
 static KalDate *today;
 
-
 @interface KalDate ()
-+ (void)cacheTodaysDate;
-@end
 
+@property (nonatomic, readwrite) NSUInteger day;
+@property (nonatomic, readwrite) NSUInteger month;
+@property (nonatomic, readwrite) NSUInteger year;
+
+@end
 
 @implementation KalDate
 
-+ (void)initialize
+- (BOOL)isEqual:(id)anObject
 {
-  [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(cacheTodaysDate) name:UIApplicationSignificantTimeChangeNotification object:nil];
-  [self cacheTodaysDate];
+	if (![anObject isKindOfClass: [KalDate class]])
+		return NO;
+	
+	KalDate *aDate = anObject;
+	return self.hash == aDate.hash;
+}
+- (BOOL)isToday
+{
+	return [self isEqual: today];
 }
 
-+ (void)cacheTodaysDate
++ (KalDate *) dateWithDate: (NSDate *) date
 {
-  [today release];
-  today = [[KalDate dateFromNSDate:[NSDate date]] retain];
+	NSDateComponents *parts = [date cc_componentsForMonthDayAndYear];
+	return [KalDate dateWithDay: parts.day month: parts.month year: parts.year];
+}
++ (KalDate *)dateWithDay:(NSUInteger)day month:(NSUInteger)month year:(NSUInteger)year
+{
+	return [[KalDate alloc] initWithDay:day month:month year:year];
 }
 
-+ (KalDate *)dateForDay:(unsigned int)day month:(unsigned int)month year:(unsigned int)year
+- (id) initWithDay:(NSUInteger)day month:(NSUInteger)month year:(NSUInteger)year;
 {
-  return [[[KalDate alloc] initForDay:day month:month year:year] autorelease];
+    if ((self = [super init]))
+    {
+        self.day = day;
+        self.month = month;
+        self.year = year;
+	}
+	
+	return self;
 }
-
-+ (KalDate *)dateFromNSDate:(NSDate *)date
-{
-  NSDateComponents *parts = [date cc_componentsForMonthDayAndYear];
-  return [KalDate dateForDay:[parts day] month:[parts month] year:[parts year]];
-}
-
-- (id)initForDay:(unsigned int)day month:(unsigned int)month year:(unsigned int)year
-{
-  if ((self = [super init])) {
-    a.day = day;
-    a.month = month;
-    a.year = year;
-  }
-  return self;
-}
-
-- (unsigned int)day { return a.day; }
-- (unsigned int)month { return a.month; }
-- (unsigned int)year { return a.year; }
-
-- (NSDate *)NSDate
-{
-  NSDateComponents *c = [[[NSDateComponents alloc] init] autorelease];
-  c.day = a.day;
-  c.month = a.month;
-  c.year = a.year;
-  return [[NSCalendar currentCalendar] dateFromComponents:c];
-}
-
-- (BOOL)isToday { return [self isEqual:today]; }
 
 - (NSComparisonResult)compare:(KalDate *)otherDate
 {
-  NSInteger selfComposite = a.year*10000 + a.month*100 + a.day;
-  NSInteger otherComposite = [otherDate year]*10000 + [otherDate month]*100 + [otherDate day];
-  
-  if (selfComposite < otherComposite)
-    return NSOrderedAscending;
-  else if (selfComposite == otherComposite)
-    return NSOrderedSame;
-  else
-    return NSOrderedDescending;
+	return [@(self.hash) compare:@(otherDate.hash)];
 }
 
-#pragma mark -
-#pragma mark NSObject interface
-
-- (BOOL)isEqual:(id)anObject
+- (NSDate *)date
 {
-  if (![anObject isKindOfClass:[KalDate class]])
-    return NO;
-  
-  KalDate *d = (KalDate*)anObject;
-  return a.day == [d day] && a.month == [d month] && a.year == [d year];
-}
-
-- (NSUInteger)hash
-{
-  return a.day;
+	NSDateComponents *components = [[NSDateComponents alloc] init];
+	components.day = self.day;
+	components.month = self.month;
+	components.year = self.year;
+	return [[NSCalendar currentCalendar] dateFromComponents: components];
 }
 
 - (NSString *)description
 {
-  return [NSString stringWithFormat:@"%u/%u/%u", a.month, a.day, a.year];
+	return [NSString stringWithFormat:@"<%@: %p; %d/%02d/%04d>", NSStringFromClass(self.class), self, self.month, self.day, self.year];
+}
+
+- (NSUInteger)hash
+{
+	return self.year * 10000 + self.month * 100 + self.day;
+}
+
++ (void)cacheTodaysDate
+{
+	today = [KalDate dateWithDate: [NSDate date]];
+}
++ (void)initialize
+{
+	if (self == [KalDate class])
+	{
+		[[NSNotificationCenter defaultCenter] addObserver: self selector: @selector(cacheTodaysDate) name:UIApplicationSignificantTimeChangeNotification object: nil];
+		[self cacheTodaysDate];
+	}
 }
 
 @end

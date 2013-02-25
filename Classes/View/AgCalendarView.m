@@ -21,10 +21,12 @@
     if (calendar==nil)
     {
         g = [Globals sharedDataManager];
-        calendar = [[KalViewController alloc] init];
+        calendar = [[KalViewController alloc] initWithSelectedDate: [NSDate date] wantsTableView: YES];
+        calendar.title = @"Theme";
+
         dataSource = [g.dbSource isEqualToString:@"coredata"] ? [[SQLDataSource alloc] init] : [[EventKitDataSource alloc] init];
         calendar.dataSource = dataSource;
-        calendar.delegate = self;
+        calendar.tableView.dataSource = dataSource;
         [self addSubview:calendar.view];
     }
     return calendar;
@@ -153,11 +155,5 @@
     g.viewEditable = editable;
 }
 
--(void)dealloc
-{
-    [calendar release];
-    [dataSource release];
-    [super dealloc];
-}
 
 @end
