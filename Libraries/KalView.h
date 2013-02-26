@@ -50,7 +50,7 @@
 - (void) markTilesForDates:(NSArray *) dates;
 - (void) redrawEntireMonth;
 - (void) selectDate: (KalDate *) date;
-- (void) slide: (KalGridViewSlideType) slideType; // This method is exposed for the delegate. It should be called *after* the KalLogic has moved to the month specified by the user.
+- (void) slide: (KalGridViewSlideType) slideType;
 
 #pragma mark - Appearance Customization
 
@@ -58,6 +58,10 @@
 @property (nonatomic, strong) UIImage *gridDropShadowImage;
 @property (nonatomic, strong) UIColor *titleLabelTextColor;
 @property (nonatomic, strong) UIColor *weekdayLabelTextColor;
+@property (nonatomic, strong) UIColor *titleShadowColor;
+@property (nonatomic, strong) UIColor *weekdayShadowColor;
+@property (nonatomic) NSString *titleShadowOffset;
+@property (nonatomic) NSString *weekdayShadowOffset;
 
 - (UIImage *) leftArrowImageForState: (UIControlState) state;
 - (UIImage *) rightArrowImageForState: (UIControlState) state;
@@ -72,5 +76,6 @@
 - (void) showPreviousMonth;
 - (void) showFollowingMonth;
 - (void) didSelectDate: (KalDate *) date;
+- (void) didSelectDateLong: (KalDate *) date;
 
 @end

@@ -50,6 +50,22 @@ NSString *const KalDataSourceChangedNotification = @"KalDataSourceChangedNotific
   return (KalView *) self.view;
 }
 
+- (void)setDataSource:(id<KalDataSource>)aDataSource
+{
+  if (_dataSource != aDataSource) {
+    _dataSource = aDataSource;
+    _tableView.dataSource = (id<UITableViewDataSource>) _dataSource;
+  }
+}
+
+- (void)setDelegate:(id<UITableViewDelegate>)aDelegate
+{
+  if (_delegate != aDelegate) {
+    _delegate = aDelegate;
+    self.tableView.delegate = _delegate;
+  }
+}
+
 - (NSDate *) selectedDate
 {
   return self.calendarView.selectedDate.date;
@@ -94,19 +110,38 @@ NSString *const KalDataSourceChangedNotification = @"KalDataSourceChangedNotific
   self.selectedDate = date;
   [self clearTable];
   
+  
   NSDate *from = [date cc_dateByMovingToBeginningOfDay];
   NSDate *to = [date cc_dateByMovingToEndOfDay];
+  
+  if ([self.delegate respondsToSelector:@selector(didSelectDate:)]) {
+    [self.delegate performSelector:@selector(didSelectDate:) withObject:to];
+  }
+  
   [self.dataSource loadItemsFromDate: from toDate: to];
   
   [self.tableView reloadData];
   [self.tableView flashScrollIndicators];
 }
+
+- (void)didSelectDateLong:(KalDate *)_date
+{
+  if ([self.delegate respondsToSelector:@selector(didSelectDateLong:)]) {
+    NSDate *to = [_date.date cc_dateByMovingToEndOfDay];
+    [self.delegate performSelector:@selector(didSelectDateLong:) withObject:to];
+  }
+}
+
 - (void) showFollowingMonth
 {
   [self clearTable];
   [self.logic advanceToFollowingMonth];
   [self.calendarView slide: KalGridViewSlideTypeUp];
   [self reloadData];
+  
+  if ([self.delegate respondsToSelector:@selector(showFollowingMonth:)]) {
+    [self.delegate performSelector:@selector(showFollowingMonth:) withObject:nil];
+  }
 }
 - (void) showPreviousMonth
 {
@@ -114,6 +149,10 @@ NSString *const KalDataSourceChangedNotification = @"KalDataSourceChangedNotific
   [self.logic retreatToPreviousMonth];
   [self.calendarView slide: KalGridViewSlideTypeDown];
   [self reloadData];
+  
+  if ([self.delegate respondsToSelector:@selector(showPreviousMonth:)]) {
+    [self.delegate performSelector:@selector(showPreviousMonth:) withObject:nil];
+  }
 }
 
 #pragma mark Kal Data Source Callbacks
@@ -143,11 +182,17 @@ NSString *const KalDataSourceChangedNotification = @"KalDataSourceChangedNotific
 {
   if (!self.title) self.title = @"Calendar";
   
-  KalView *kalView = [[KalView alloc] initWithFrame: [UIScreen mainScreen].bounds logic: self.logic wantsTableView: self.wantsTableView];
+  CGRect popoverRect = CGRectMake(0, 0, self.contentSizeForViewInPopover.width, self.contentSizeForViewInPopover.height);
+  CGRect windowsRect = [[UIScreen mainScreen] applicationFrame];
+  CGRect rect = CGRectMake(0, 0, MIN(popoverRect.size.width, windowsRect.size.width), MIN(popoverRect.size.height, windowsRect.size.height));
+  
+  KalView *kalView = [[KalView alloc] initWithFrame: rect logic: self.logic wantsTableView: self.wantsTableView];
   kalView.delegate = self;
   
   self.view = kalView;
   self.tableView = kalView.tableView;
+  _tableView.dataSource = (id<UITableViewDataSource>) _dataSource;
+  _tableView.delegate = _delegate;
   [kalView selectDate: [KalDate dateWithDate: self.initialDate]];
   [self reloadData];
 }

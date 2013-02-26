@@ -144,8 +144,18 @@ static NSString *const KalGridViewSlideAnimationID = @"KalSwitchMonths";
 - (void) touchesBegan: (NSSet *) touches withEvent: (UIEvent *) event
 {
 	[super touchesBegan: touches withEvent: event];
+        
+    [self performSelector:@selector(selectDateLong)
+               withObject:nil
+               afterDelay:0.5];
+    
 	[self receivedTouches:touches withEvent:event];
 }
+
+- (void)selectDateLong {
+    [_delegate didSelectDateLong:self.selectedTile.date];
+}
+
 - (void) touchesEnded: (NSSet *) touches withEvent: (UIEvent *) event
 {
 	[super touchesEnded: touches withEvent: event];

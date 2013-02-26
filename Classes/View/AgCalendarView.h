@@ -18,6 +18,7 @@
 {
     Globals *g;
     id dataSource;
+    BOOL tableshow;
 @private
     KalViewController *calendar;
 }

@@ -12,12 +12,14 @@
 {
     NSString *dbSource;
     NSString *theme;
+    BOOL _showTable;
     BOOL _viewEditable;
 }
 
 @property (nonatomic,readwrite,strong) NSString *dbSource;
 @property (nonatomic,readwrite,strong) NSString *theme;
 @property BOOL viewEditable;
+@property BOOL showTable;
 
 -(void) clearData;
 + (Globals*)sharedDataManager;

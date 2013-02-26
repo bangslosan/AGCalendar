@@ -7,9 +7,16 @@
 Titanium.Calendar = Ti.Calendar = require('ag.calendar');
 
 // Set EventKit as our datasource
-Ti.Calendar.dataSource("eventkit");
+Ti.Calendar.dataSource("coredata");
 
+// Helpers
 var platform = Titanium.Platform.osname;
+
+var img = function(_img) {
+	var path = Ti.Filesystem.resourcesDirectory+"images/";
+ 	return path+_img+'.png';
+};
+
 
 // Create a window to hold our calendar
 var window = Ti.UI.createWindow({
@@ -23,6 +30,40 @@ var window = Ti.UI.createWindow({
 var calendarView = Ti.Calendar.createView({
     top:0,
     editable: true,
+    showTable: true,
+	theme: {
+		tileView: {
+			background: {
+				normal: img("tile"),
+				selected: img("tile_selected"),
+				adjacent: img("tile"),
+				today: img("tile_today"),
+                todaySelected: img("tile_today_selected")
+			},
+			text: {
+				normal: "white",
+				today: "white",
+				selected: "white",
+                adjacent: "#607eb9"
+			}
+		},
+		mainView: {
+			gridBackgroundImage: img("header_bg"),
+			gridDropShadowImage: img("kal_grid_shadow"),
+			leftArrowImage: img("left-arrow"),
+			rightArrowImage: img("right-arrow"),
+			titleTextColor: "#fff",
+            titleShadowColor: "#102e4c",
+            titleShadowOffset: {x:0,y:-1},
+			weekdayTextColor: "white",
+            weekdayShadowColor: "#102e4c",
+            weekdayShadowOffset: {x:0,y:-1}
+		},
+		gridView: {
+			backgroundImage: img("grid_background"),
+			backgroundColor: "#7190d2"
+		}
+	},
     color:"white"
 });
 
@@ -167,7 +208,7 @@ var endDate = new Date();
 endDate.setHours(endDate.getHours()+3);
 
 // Add event to our calendar.
-/*Ti.Calendar.addEvent({
+Ti.Calendar.addEvent({
     title: "Starting and ending today",
     startDate: new Date(),
     endDate: endDate,
@@ -182,7 +223,7 @@ endDate.setHours(endDate.getHours()+3);
     type:"private",
     attendees: "Bill Gates, Mark Zuckerberg",
     organizer: "Chris"
-});*/
+});
 
 // Event 2: An event recurring every month for one year.
 // First, create a recurring end-date.

@@ -16,6 +16,10 @@ static NSDictionary *KalViewDefaultAppearance;
 @interface KalView ()
 
 @property (nonatomic) BOOL hasTitleLabelTextColor;
+@property (nonatomic) BOOL hasWeekdayShadowColor;
+@property (nonatomic) BOOL hasWeekdayShadowOffset;
+@property (nonatomic) BOOL hasTitleShadowColor;
+@property (nonatomic) BOOL hasTitleShadowOffset;
 @property (nonatomic) BOOL hasWeekdayLabelTextColor;
 @property (nonatomic) BOOL wantsTableView;
 @property (nonatomic, strong) KalLogic *logic;
@@ -47,7 +51,7 @@ static NSDictionary *KalViewDefaultAppearance;
 	[NSException raise: @"Incomplete Initializer" format: @"KalView must be initialized with a KalLogic. Use the initWithFrame:logic:wantsTableView: method."];
 	return nil;
 }
-- (id) initWithFrame: (CGRect) frame logic: (KalLogic *) theLogic wantsTableView: (BOOL) flag
+- (id) initWithFrame:(CGRect)frame logic:(KalLogic *)theLogic wantsTableView:(BOOL)flag
 {
 	if ((self = [super initWithFrame: frame]))
 	{
@@ -153,9 +157,9 @@ static NSDictionary *KalViewDefaultAppearance;
 	self.headerTitleLabel.font = [UIFont boldSystemFontOfSize:22.0];
 	self.headerTitleLabel.textAlignment = UITextAlignmentCenter;
 	self.headerTitleLabel.textColor = self.titleLabelTextColor;
-	self.headerTitleLabel.shadowColor = [UIColor whiteColor];
-	self.headerTitleLabel.shadowOffset = CGSizeMake(0, 1);
-	
+	self.headerTitleLabel.shadowColor = self.titleShadowColor;
+	self.headerTitleLabel.shadowOffset = CGSizeFromString(self.titleShadowOffset);
+    
 	[self setHeaderTitleText: self.logic.localizedMonthAndYear];
 	[headerView addSubview: self.headerTitleLabel];
 	
@@ -202,8 +206,8 @@ static NSDictionary *KalViewDefaultAppearance;
 		weekdayLabel.font = [UIFont boldSystemFontOfSize:10];
 		weekdayLabel.textAlignment = UITextAlignmentCenter;
 		weekdayLabel.textColor = self.weekdayLabelTextColor;
-		weekdayLabel.shadowColor = [UIColor whiteColor];
-		weekdayLabel.shadowOffset = CGSizeMake(0, 1.0);
+		weekdayLabel.shadowColor = self.weekdayShadowColor;
+		weekdayLabel.shadowOffset = CGSizeFromString(self.weekdayShadowOffset);
 		weekdayLabel.text = weekdayNames[i];
 		
 		[weekdayLabel setAccessibilityLabel: fullWeekdayNames[i]];
@@ -228,8 +232,8 @@ static NSDictionary *KalViewDefaultAppearance;
 	{
 		KalViewDefaultAppearance = @{
         @(UIControlStateNormal): @{
-        @"leftArrowImage": [UIImage imageWithContentsOfFile:[self getPathToModuleAsset:@"kal_left_arrow.png"]],
-        @"rightArrowImage": [UIImage imageWithContentsOfFile:[self getPathToModuleAsset:@"kal_right_arrow.png"]]
+            @"leftArrowImage": [UIImage imageWithContentsOfFile:[self getPathToModuleAsset:@"kal_left_arrow.png"]],
+            @"rightArrowImage": [UIImage imageWithContentsOfFile:[self getPathToModuleAsset:@"kal_right_arrow.png"]]
         }
 		};
 	}
@@ -370,6 +374,39 @@ static NSDictionary *KalViewDefaultAppearance;
 	return [UIColor colorWithWhite: 0.298 alpha: 1];
 }
 
+- (UIColor *) weekdayShadowColor
+{
+    if (self.hasWeekdayShadowColor)
+        return [self.weekdayLabels[0] shadowColor];
+    
+    return [UIColor blackColor];
+}
+
+- (NSString *) weekdayShadowOffset
+{
+    if (self.hasWeekdayShadowOffset)
+        return NSStringFromCGSize([self.weekdayLabels[0] shadowOffset]);
+    
+    return NSStringFromCGSize(CGSizeMake(0, 1.0));
+}
+
+- (UIColor *) titleShadowColor
+{
+    if (self.hasTitleShadowColor)
+        return self.titleShadowColor;
+    
+    return [UIColor blackColor];
+}
+
+- (NSString *) titleShadowOffset
+{
+    if (self.hasTitleShadowOffset)
+        return self.titleShadowOffset;
+    
+    return NSStringFromCGSize(CGSizeMake(0, 1.0));
+}
+
+
 - (UIImage *) gridBackgroundImage
 {
 	return self.backgroundView.image ?: [UIImage imageWithContentsOfFile:[self getPathToModuleAsset:@"kal_grid_background.png"]];
@@ -395,6 +432,39 @@ static NSDictionary *KalViewDefaultAppearance;
 {
 	self.shadowView.image = gridDropShadowImage;
 }
+
+- (void) setTitleShadowColor:(UIColor *)titleShadowColor
+{
+    self.hasTitleShadowColor = YES;
+    self.headerTitleLabel.shadowColor = titleShadowColor;
+}
+
+- (void) setTitleShadowOffset:(NSString *)titleShadowOffset
+{
+    self.hasTitleShadowOffset = YES;
+    self.headerTitleLabel.shadowOffset = CGSizeFromString(titleShadowOffset);
+}
+
+- (void) setWeekdayShadowColor:(UIColor *)weekdayShadowColor
+{
+    self.hasWeekdayShadowColor = YES;
+    NSUInteger count = [self.weekdayLabels count];
+    for (NSUInteger i=0;i<count;i++)
+    {
+        [self.weekdayLabels[i] setShadowColor:weekdayShadowColor];
+    }
+}
+
+- (void) setWeekdayShadowOffset:(NSString *)weekdayShadowOffset
+{
+    self.hasWeekdayShadowOffset = YES;
+    NSUInteger count = [self.weekdayLabels count];
+    for (NSUInteger i=0;i<count;i++)
+    {
+        [self.weekdayLabels[i] setShadowOffset:CGSizeFromString(weekdayShadowOffset)];
+    }
+}
+
 - (void) setLeftArrowImage: (UIImage *) image forState: (UIControlState) state
 {
 	[self setValue: image forAppearanceKey: @"leftArrowImage" forState: state];

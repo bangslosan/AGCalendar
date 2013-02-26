@@ -31,6 +31,7 @@ static Globals *sharedGlobalDataManager = nil;
         theme = @"default";
         dbSource = @"";
         _viewEditable = NO;
+        _showTable = YES;
     }
 	return self;
     
@@ -52,6 +53,7 @@ static Globals *sharedGlobalDataManager = nil;
 -(void) clearData {
     theme = @"default";
 	dbSource = @"";
+    _showTable = YES;
     _viewEditable = NO;
 }
 

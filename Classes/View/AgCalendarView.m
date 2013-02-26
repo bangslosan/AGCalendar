@@ -11,6 +11,10 @@
 #import "Event.h"
 #import "SQLDataSource.h"
 #import "EventKitDataSource.h"
+#import "Kal.h"
+#import "KalTileView.h"
+#import "KalMonthView.h"
+#import "ImageLoader.h"
 
 @implementation AgCalendarView
 
@@ -21,12 +25,14 @@
     if (calendar==nil)
     {
         g = [Globals sharedDataManager];
-        calendar = [[KalViewController alloc] initWithSelectedDate: [NSDate date] wantsTableView: YES];
+        
+        calendar = [[KalViewController alloc] initWithSelectedDate: [NSDate date] wantsTableView: g.showTable];
         calendar.title = @"Theme";
 
         dataSource = [g.dbSource isEqualToString:@"coredata"] ? [[SQLDataSource alloc] init] : [[EventKitDataSource alloc] init];
-        calendar.dataSource = dataSource;
-        calendar.tableView.dataSource = dataSource;
+        calendar.delegate = self;
+        [calendar setDataSource:dataSource];
+        [calendar.tableView setDataSource:dataSource];
         [self addSubview:calendar.view];
     }
     return calendar;
@@ -140,12 +146,95 @@
 }
 
 
-
 -(void)setColor_:(id)color
 {
     UIColor *c = [[TiUtils colorValue:color] _color];
     KalViewController *s = [self calendar];
     s.view.backgroundColor = c;
+}
+
+-(UIImage*)getImageFromUrl:(NSString*)path
+{
+	return [[ImageLoader sharedLoader] loadImmediateImage:[TiUtils toURL:path proxy:self.proxy]];
+}
+
+-(UIColor*)getColor:(NSString*)color
+{
+	UIColor *c = [[TiUtils colorValue:color] _color];
+    return c;
+}
+
+-(void)setTheme_:(id)styling
+{
+    ENSURE_SINGLE_ARG(styling,NSDictionary);
+    
+    if ([styling objectForKey:@"tileView"] != nil) {
+        KalTileView *tileView = [KalTileView appearance];
+        NSDictionary *tile = [styling objectForKey:@"tileView"];
+        if ([tile objectForKey:@"background"] != nil) {
+            NSDictionary *tileBG = [tile objectForKey:@"background"];
+            [tileView setBackgroundImage: [self getImageFromUrl:[tileBG objectForKey:@"normal"]] forState: KalTileViewStateNormal];
+            [tileView setBackgroundImage: [self getImageFromUrl:[tileBG objectForKey:@"selected"]] forState: KalTileViewStateSelected];
+            [tileView setBackgroundImage: [self getImageFromUrl:[tileBG objectForKey:@"adjacent"]] forState: KalTileViewStateAdjacent];
+            [tileView setBackgroundImage: [self getImageFromUrl:[tileBG objectForKey:@"today"]] forState: KalTileViewStateToday];
+            [tileView setBackgroundImage: [self getImageFromUrl:[tileBG objectForKey:@"todaySelected"]] forState: KalTileViewStateToday | KalTileViewStateSelected];
+            [tileView setReversesShadow:1 forState: KalTileViewStateSelected | KalTileViewStateToday];
+            [tileView setShadowColor:[UIColor blackColor] forState:KalTileViewStateNormal];
+            [tileView setShadowColor:[UIColor clearColor] forState:KalTileViewStateAdjacent];
+        }
+        
+        if([tile objectForKey:@"text"] != nil) {
+            NSDictionary *text = [tile objectForKey:@"text"];
+            [tileView setTextColor: [self getColor:[text objectForKey:@"normal"]] forState: KalTileViewStateNormal];
+            [tileView setTextColor: [self getColor:[text objectForKey:@"today"]] forState: KalTileViewStateToday];
+            [tileView setTextColor: [self getColor:[text objectForKey:@"selected"]] forState: KalTileViewStateSelected];
+            [tileView setTextColor: [self getColor:[text objectForKey:@"adjacent"]] forState: KalTileViewStateAdjacent];
+        }
+    }
+    
+    if([styling objectForKey:@"monthView"] != nil) {
+        KalMonthView *monthView = [KalMonthView appearance];
+        NSDictionary *tile = [styling objectForKey:@"monthView"];
+        [monthView setBackgroundImage: [self getImageFromUrl:[tile objectForKey:@"backgroundImage"]]];
+    }
+    
+    if([styling objectForKey:@"mainView"] != nil) {
+        KalView *view = [KalView appearance];
+        NSDictionary *tiles = [styling objectForKey:@"mainView"];
+        [view setGridBackgroundImage: [self getImageFromUrl:[tiles objectForKey:@"gridBackgroundImage"]]];
+        [view setGridDropShadowImage: [self getImageFromUrl:[tiles objectForKey:@"gridDropShadowImage"]]];
+        [view setLeftArrowImage: [self getImageFromUrl:[tiles objectForKey:@"leftArrowImage"]] forState: UIControlStateNormal];
+        [view setRightArrowImage: [self getImageFromUrl:[tiles objectForKey:@"rightArrowImage"]] forState: UIControlStateNormal];
+        [view setTitleLabelTextColor: [self getColor:[tiles objectForKey:@"titleTextColor"]]];
+        [view setWeekdayLabelTextColor: [self getColor:[tiles objectForKey:@"weekdayTextColor"]]];
+        
+        // Shadows
+        if ([tiles objectForKey:@"weekdayShadowOffset"] != nil) {
+            NSDictionary *wso = [tiles objectForKey:@"weekdayShadowOffset"];
+            view.weekdayShadowColor = [tiles objectForKey:@"weekdayShadowColor"] != nil ? [self getColor:[tiles objectForKey:@"weekdayShadowColor"]] : nil;
+            view.weekdayShadowOffset = [tiles objectForKey:@"weekdayShadowOffset"] != nil ? [NSString stringWithFormat:@"{%@, %@}", [wso objectForKey:@"x"], [wso objectForKey:@"y"]] : nil;
+        }
+        
+        if ([tiles objectForKey:@"titleShadowOffset"] != nil) {
+            NSDictionary *tso = [tiles objectForKey:@"titleShadowOffset"];
+            view.titleShadowColor = [tiles objectForKey:@"titleShadowColor"] != nil ? [self getColor:[tiles objectForKey:@"titleShadowColor"]] : nil;
+            view.titleShadowOffset = [tiles objectForKey:@"titleShadowOffset"] != nil ? [NSString stringWithFormat:@"{%@, %@}", [tso objectForKey:@"x"], [tso objectForKey:@"y"]] : nil;
+        }
+    }
+    
+    if([styling objectForKey:@"gridView"] != nil) {
+        KalGridView *gridView = [KalGridView appearance];
+        NSDictionary *tile = [styling objectForKey:@"gridView"];
+        [gridView setGridBackgroundColor: [self getColor:[tile objectForKey:@"backgroundColor"]]];
+        [gridView setGridBackgroundImage: [self getImageFromUrl:[tile objectForKey:@"backgroundImage"]]];
+    }
+}
+
+-(void)setShowTable_:(id)value
+{
+    g = [Globals sharedDataManager];
+    BOOL show = [TiUtils boolValue:value];
+    g.showTable = show;
 }
 
 -(void)setEditable_:(id)value
