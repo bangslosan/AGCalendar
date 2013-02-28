@@ -158,6 +158,7 @@ static NSString *const KalGridViewSlideAnimationID = @"KalSwitchMonths";
 
 - (void) touchesEnded: (NSSet *) touches withEvent: (UIEvent *) event
 {
+    [NSObject cancelPreviousPerformRequestsWithTarget:self];
 	[super touchesEnded: touches withEvent: event];
 	
 	UITouch *touch = [touches anyObject];
