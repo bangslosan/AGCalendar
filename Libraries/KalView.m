@@ -379,7 +379,7 @@ static NSDictionary *KalViewDefaultAppearance;
     if (self.hasWeekdayShadowColor)
         return [self.weekdayLabels[0] shadowColor];
     
-    return [UIColor blackColor];
+    return [UIColor whiteColor];
 }
 
 - (NSString *) weekdayShadowOffset
@@ -395,7 +395,7 @@ static NSDictionary *KalViewDefaultAppearance;
     if (self.hasTitleShadowColor)
         return self.titleShadowColor;
     
-    return [UIColor blackColor];
+    return [UIColor whiteColor];
 }
 
 - (NSString *) titleShadowOffset

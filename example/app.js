@@ -30,7 +30,7 @@ var window = Ti.UI.createWindow({
 var calendarView = Ti.Calendar.createView({
     top:0,
     editable: true,
-    showTable: true,
+    showTable: false,
 	theme: {
 		tileView: {
 			background: {

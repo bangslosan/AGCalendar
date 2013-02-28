@@ -79,6 +79,28 @@ static NSDictionary *KalTileViewDefaultAppearance;
 	return state;
 };
 
+- (NSInteger) getWeekOfDate:(KalDate*)thisDate
+{
+    NSCalendar *cal = [NSCalendar currentCalendar];
+    NSDateComponents *components = [[NSDateComponents alloc] init];
+    [components setDay:thisDate.day];
+    [components setMonth:thisDate.month];
+    [components setYear:thisDate.year];
+    NSDate *newDate = [cal dateFromComponents:components];
+    
+    NSDateComponents *comp = [cal components:NSYearForWeekOfYearCalendarUnit |NSYearCalendarUnit|NSMonthCalendarUnit|NSWeekCalendarUnit|NSWeekdayCalendarUnit fromDate:newDate];
+    NSInteger week = [comp week];
+    
+    [comp setWeekday:1];
+    NSDate *firstDay = [cal dateFromComponents:comp];
+    
+    if ([firstDay isEqualToDate:newDate]) {
+        return week;
+    } else {
+        return 0;
+    }
+}
+
 - (void) drawRect: (CGRect) rect
 {
 	CGContextRef ctx = UIGraphicsGetCurrentContext();
@@ -100,8 +122,28 @@ static NSDictionary *KalTileViewDefaultAppearance;
 	if (self.marked)
 		[markerImage drawInRect: CGRectMake(21.0, 5.0, 4.0, 5.0)];
     
+        
+    NSInteger week = [self getWeekOfDate:self.date];
+    
 	NSInteger n = self.date.day;
 	NSString *dayText = [NSString stringWithFormat: @"%lu", (unsigned long) n];
+    
+    if (week != 0) {
+        UIColor *weekColor = [UIColor colorWithWhite:1.0 alpha:0.3];
+        NSString *weekNum = [NSString stringWithFormat: @"%lu", (unsigned long) week];
+        const char *wek = [weekNum cStringUsingEncoding: NSUTF8StringEncoding];
+        
+        CGSize weekSize = [weekNum sizeWithFont:[UIFont systemFontOfSize:5.0]];
+        CGFloat textX = roundf(0.5 * (KalGridViewTileSize.width - weekSize.width))-19;
+        CGFloat textY = roundf(0.5 * (KalGridViewTileSize.height - weekSize.height))+12;
+        textX += (week >= 10) ? 1 : 0;
+        
+        [weekColor setFill];
+        CGContextSetFontSize(ctx, 11.0);
+        CGContextShowTextAtPoint(ctx, textX, textY, wek, week >= 10 ? 2 : 1);
+        CGContextSetFontSize(ctx, fontSize);
+    }
+    
 	const char *day = [dayText cStringUsingEncoding: NSUTF8StringEncoding];
 	CGSize textSize = [dayText sizeWithFont: font];
 	
