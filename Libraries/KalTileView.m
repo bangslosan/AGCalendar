@@ -139,7 +139,7 @@ static NSDictionary *KalTileViewDefaultAppearance;
         textX += (week >= 10) ? 1 : 0;
         
         [weekColor setFill];
-        CGContextSetFontSize(ctx, 11.0);
+        CGContextSetFontSize(ctx, 10.0);
         CGContextShowTextAtPoint(ctx, textX, textY, wek, week >= 10 ? 2 : 1);
         CGContextSetFontSize(ctx, fontSize);
     }

@@ -155,15 +155,21 @@ calendarView.addEventListener("date:longpress", function(e) {
     
     dialog.addEventListener('click', function(e){
         if (e.index == 0) {
+            var identifier = Ti.Calendar.identifier;
+            
             Ti.Calendar.addEvent({
                 title: "Added event",
                 startDate: date_clicked,
                 endDate: endDate,
                 location: "At home",
-                identifier: Ti.Calendar.identifier
+                identifier: identifier
             });
             
             setTimeout(function() {
+                var event = Ti.Calendar.fetchEvent(identifier);
+                Ti.API.info("("+identifier+"): " + JSON.stringify(event));
+                       
+                Ti.API.info("Deleted: "+Ti.Calendar.deleteEvent(identifier));
                 calendarView.selectTodaysDate();
             },1000);
         }

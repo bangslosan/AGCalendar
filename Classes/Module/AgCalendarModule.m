@@ -87,7 +87,6 @@
 #pragma Public APIs
 -(void)addEvent:(id)event
 {
-    ENSURE_UI_THREAD_1_ARG(event);
     ENSURE_SINGLE_ARG(event,NSDictionary);
     NSDate *startDate = [event objectForKey:@"startDate"];
     NSDate *endDate = [event objectForKey:@"endDate"];
@@ -156,14 +155,11 @@
 {
     global = [Globals sharedDataManager];
     dataStore = [global.dbSource isEqualToString:@"coredata"] ? [[SQLDataSource alloc] init] : [[EventKitDataSource alloc] init];
-    return [dataStore deleteEvent:[identifier objectAtIndex:0]];
-    
+    return [dataStore removeEvent:[identifier objectAtIndex:0]];
 }
 
 -(void)deleteAllEvents:(id)event
 {
-    ENSURE_UI_THREAD_1_ARG(event);
-    
     global = [Globals sharedDataManager];
     if ([global.dbSource isEqualToString:@"coredata"]) {
         dataStore = [[SQLDataSource alloc] init];
